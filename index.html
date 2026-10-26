@@ -775,40 +775,58 @@ function filterLHD() {
       }
     }
 
-    // Ping Logic
-    async function pingTarget(ip, logId, msId, replyId, rtoId, unreachId, key) {
-      const start = performance.now();
-      const logBox = document.getElementById(logId);
-      stats[key].total++;
+async function pingTarget(ip, logId, msId, replyId, rtoId, unreachId, key) {
+  const start = performance.now();
+  const logBox = document.getElementById(logId);
+  stats[key].total++;
 
-      try {
-        await fetch(`http://${ip}?t=${Date.now()}`, { mode: 'no-cors', cache: 'no-cache' });
-        const latency = Math.round(performance.now() - start);
+  const controller = new AbortController();
+  // Set batas timeout 1.8 detik
+  const timeoutId = setTimeout(() => controller.abort(), 1800);
 
-        stats[key].success++;
-        document.getElementById(msId).textContent = `${latency}ms`;
+  try {
+    // Jalankan request HTTP no-cors dengan deteksi abort murni
+    await fetch(`http://${ip}/?t=${Date.now()}`, {
+      mode: 'no-cors',
+      cache: 'no-cache',
+      signal: controller.signal
+    });
 
-        const item = document.createElement('div');
-        item.textContent = `Replay from ${ip} bytes:32 time=${latency}ms TTL 27`;
-        logBox.appendChild(item);
+    clearTimeout(timeoutId);
+    const latency = Math.round(performance.now() - start);
 
-      } catch (err) {
-        stats[key].rto++;
-        document.getElementById(msId).textContent = `TIMEOUT`;
-
-        const item = document.createElement('div');
-        item.style.color = '#ff3344';
-        item.textContent = `Request timeout from ${ip}`;
-        logBox.appendChild(item);
-      }
-
-      logBox.scrollTop = logBox.scrollHeight;
-
-      const total = stats[key].total;
-      document.getElementById(replyId).textContent = `Replay ${Math.round((stats[key].success / total) * 100)}%`;
-      document.getElementById(rtoId).textContent = `RTO ${Math.round((stats[key].rto / total) * 100)}%`;
-      document.getElementById(unreachId).textContent = `Unreachable ${Math.round((stats[key].unreach / total) * 100)}%`;
+    // Batas bawah latensi: Jika di bawah 15ms pada jaringan nirkabel/LHD, 
+    // ini adalah paket penolakan cepat dari Access Point/Router lokal
+    if (latency < 15) {
+      throw new Error("Router Local Reject");
     }
+
+    stats[key].success++;
+    document.getElementById(msId).textContent = `${latency}ms`;
+
+    const item = document.createElement('div');
+    item.textContent = `Replay from ${ip} bytes:32 time=${latency}ms TTL 27`;
+    logBox.appendChild(item);
+
+  } catch (err) {
+    clearTimeout(timeoutId);
+    stats[key].rto++;
+    document.getElementById(msId).textContent = `TIMEOUT`;
+
+    const item = document.createElement('div');
+    item.style.color = '#ff3344';
+    item.textContent = `Request timeout from ${ip}`;
+    logBox.appendChild(item);
+  }
+
+  logBox.scrollTop = logBox.scrollHeight;
+
+  const total = stats[key].total;
+  document.getElementById(replyId).textContent = `Replay ${Math.round((stats[key].success / total) * 100)}%`;
+  document.getElementById(rtoId).textContent = `RTO ${Math.round((stats[key].rto / total) * 100)}%`;
+  document.getElementById(unreachId).textContent = `Unreachable ${Math.round((stats[key].unreach / total) * 100)}%`;
+}
+
 
     function executePingLoop() {
       if (lhdData.length === 0) return;
