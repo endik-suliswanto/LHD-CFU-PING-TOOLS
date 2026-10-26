@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LHD CFU ONBOARD ROUTER AND ORU PING TEST</title>
+  <style>
+    /* Import Font Lokal */
+    @font-face {
+      font-family: 'RajdhaniCustom';
+      src: url('./Rajdhani-Bold.ttf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'RajdhaniCustom', 'Consolas', sans-serif;
+      letter-spacing: 0.5px;
+    }
+
+    body {
+      background-color: #031322;
+      color: #00f0ff;
+      padding: 15px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 450px;
+    }
+
+    /* Header Title & Dynamic Greeting */
+    .header-title {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #00f0ff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+    }
+
+    .greeting-box {
+      font-size: 0.85rem;
+      color: #ffd700;
+      margin-bottom: 18px;
+      line-height: 1.4;
+    }
+
+    .section-label {
+      font-size: 0.85rem;
+      color: #00f0ff;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    /* Form Controls */
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      background-color: #042037;
+      border: 1px solid #00f0ff;
+      color: #ffffff;
+      font-size: 0.95rem;
+      border-radius: 4px;
+      outline: none;
+      margin-bottom: 8px;
+    }
+
+    input:focus, textarea:focus {
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+    }
+
+    /* Custom Select Trigger Display Box */
+    .custom-select-trigger {
+      width: 100%;
+      padding: 10px 12px;
+      background-color: #042037;
+      border: 1px solid #00f0ff;
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .custom-select-trigger .select-title {
+      color: #00f0ff;
+      font-weight: bold;
+    }
+
+    .custom-select-trigger .select-sub {
+      color: #94a3b8;
+      font-size: 0.8rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .btn-start {
+      background-color: #042a42;
+      color: #00ff66;
+      border-color: #00ff66;
+    }
+
+    .btn-start:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-stop {
+      background-color: #042a42;
+      color: #ff3344;
+      border-color: #ff3344;
+    }
+
+    .btn-stop:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Action Grid untuk Tombol Add, Export & Import */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn-action {
+      background-color: #042037;
+      color: #00f0ff;
+      border: 1px solid #00f0ff;
+      padding: 10px 4px;
+      font-size: 0.85rem;
+    }
+
+    .btn-export {
+      background-color: #042037;
+      color: #00ff66;
+      border: 1px solid #00ff66;
+      padding: 10px 4px;
+      font-size: 0.85rem;
+    }
+
+    .btn-import {
+      background-color: #042037;
+      color: #ffd700;
+      border: 1px solid #ffd700;
+      padding: 10px 4px;
+      font-size: 0.85rem;
+    }
+
+    .result-title {
+      font-size: 1rem;
+      color: #00f0ff;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    /* Ping Card Box */
+    .ping-card {
+      background-color: #031a2e;
+      border: 1px solid #00f0ff;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 0 6px rgba(0, 240, 255, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .ip-display {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #00f0ff;
+    }
+
+    .latency-display {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    /* Scrollable Ping Log Area */
+    .ping-log-area {
+      height: 70px;
+      overflow-y: auto;
+      background-color: #020f1a;
+      padding: 6px;
+      border-radius: 3px;
+      font-size: 0.78rem;
+      color: #00f0ff;
+      margin-bottom: 8px;
+      border: 1px solid #053352;
+    }
+
+    .ping-log-area::-webkit-scrollbar, .lhd-scroll-area::-webkit-scrollbar, .custom-option-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .ping-log-area::-webkit-scrollbar-thumb, .lhd-scroll-area::-webkit-scrollbar-thumb, .custom-option-list::-webkit-scrollbar-thumb {
+      background: #00f0ff;
+      border-radius: 3px;
+    }
+
+    .card-metrics {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: bold;
+      padding-top: 4px;
+    }
+
+    .metric-reply { color: #00ff66; }
+    .metric-rto { color: #ff3344; }
+    .metric-unreach { color: #ffd700; }
+
+    /* Scrollable LHD List Box */
+    .lhd-scroll-area {
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: #031a2e;
+      border: 1px solid #00f0ff;
+      border-radius: 4px;
+      padding: 8px;
+    }
+
+    .lhd-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      background-color: #042037;
+      border: 1px solid #053352;
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+    }
+
+    /* Circle Action Buttons */
+    .action-btn-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+      cursor: pointer;
+      border: 1px solid;
+      background: transparent;
+      padding: 0;
+    }
+
+    .btn-circle-edit {
+      color: #00f0ff;
+      border-color: #00f0ff;
+    }
+
+    .btn-circle-del {
+      color: #ff3344;
+      border-color: #ff3344;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(3, 19, 34, 0.92);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      padding: 15px;
+    }
+
+    .modal-box {
+      background: #031a2e;
+      border: 1px solid #00f0ff;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 400px;
+      padding: 18px;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+    }
+
+    .modal-header {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #00f0ff;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .ip-preview-text {
+      font-size: 0.8rem;
+      color: #ffd700;
+      margin-bottom: 10px;
+      background: #020f1a;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px dashed #053352;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    /* Custom Option Picker List (Format 2 Baris Senada Tema) */
+    .custom-option-list {
+      max-height: 220px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .option-card-item {
+      padding: 10px;
+      background-color: #042037;
+      border: 1px solid #053352;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option-card-item:hover, .option-card-item.selected {
+      border-color: #00f0ff;
+      background-color: #063154;
+    }
+
+    .opt-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #00f0ff;
+      margin-bottom: 2px;
+    }
+
+    .opt-sub {
+      font-size: 0.8rem;
+      color: #ffd700;
+    }
+
+    .alert-msg {
+      font-size: 0.9rem;
+      color: #ffffff;
+      text-align: center;
+      margin: 15px 0;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-title">LHD CFU ONB  ROUTER AND ORU<br>SUBSYSTEM CONNECTIVY PROBE</div>
+    
+    <div class="greeting-box" id="greetingText">
+      Hello and welcome back.<br>
+      It is currently loading time... Have a wonderful day
+    </div>
+
+    <div class="section-label">• SEARCH AND CHOICE LHD NUMBER / IP</div>
+    <input type="text" id="searchInput" placeholder="Search LHD or IP..." oninput="filterLHD()">
+    
+    <!-- Custom Dropdown Display Trigger -->
+    <div class="custom-select-trigger" onclick="openPickerModal()">
+      <div>
+        <div class="select-title" id="displayLhdName">Pilih Target LHD...</div>
+        <div class="select-sub" id="displayLhdIps">-- | --</div>
+      </div>
+      <div style="color: #00f0ff;">▼</div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn-start" id="btnStart" onclick="startPing()">Start Ping</button>
+      <button class="btn-stop" id="btnStop" onclick="stopPing()" disabled>Stop Ping</button>
+    </div>
+
+    <div class="result-title">Result</div>
+
+    <!-- Target IP 1 Card -->
+    <div class="ping-card">
+      <div class="card-header">
+        <span class="ip-display" id="titleIp1">10.10.10.xx</span>
+        <span class="latency-display" id="msIp1">--ms</span>
+      </div>
+      <div class="ping-log-area" id="logIp1">
+        <div>Ready to ping...</div>
+      </div>
+      <div class="card-metrics">
+        <span class="metric-reply" id="replyIp1">Replay 0%</span>
+        <span class="metric-rto" id="rtoIp1">RTO 0%</span>
+        <span class="metric-unreach" id="unreachIp1">Unreachable 0%</span>
+      </div>
+    </div>
+
+    <!-- Target IP 2 Card -->
+    <div class="ping-card">
+      <div class="card-header">
+        <span class="ip-display" id="titleIp2">10.10.50.xx</span>
+        <span class="latency-display" id="msIp2">--ms</span>
+      </div>
+      <div class="ping-log-area" id="logIp2">
+        <div>Ready to ping...</div>
+      </div>
+      <div class="card-metrics">
+        <span class="metric-reply" id="replyIp2">Replay 0%</span>
+        <span class="metric-rto" id="rtoIp2">RTO 0%</span>
+        <span class="metric-unreach" id="unreachIp2">Unreachable 0%</span>
+      </div>
+    </div>
+
+    <!-- Tombol Add, Export (Copy JSON), dan Import -->
+    <div class="action-row">
+      <button class="btn-action" onclick="openModal()">+ Add LHD</button>
+      <button class="btn-export" onclick="exportDataJSON()">📤 Copy JSON</button>
+      <button class="btn-import" onclick="openImportModal()">📥 Import JSON</button>
+    </div>
+
+    <div class="section-label">LHD List</div>
+    <div class="lhd-scroll-area" id="lhdListContainer"></div>
+  </div>
+
+  <!-- POP-UP MODAL PICKER LHD (Solusi Tampilan Senada & Teks 2 Baris) -->
+  <div class="modal-overlay" id="pickerModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">SELECT LHD TARGET</div>
+      
+      <div class="custom-option-list" id="pickerOptionsContainer"></div>
+
+      <button class="btn-stop" style="width: 100%; margin-top: 5px;" onclick="closePickerModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- POP-UP MODAL FORM (ADD/EDIT) -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <div class="modal-header" id="modalTitle">ADD NEW LHD DATA</div>
+      
+      <input type="text" id="newLhdName" placeholder="Name / LHD No. (e.g., LHD 656))" oninput="autoFillIp()">
+      <input type="text" id="ipSuffix" placeholder="Enter IP Tail/Last Octet only (e.g., 56) " oninput="autoFillIp()">
+
+      <div class="ip-preview-text">
+        <div>IP 1: <span id="previewIp1">10.10.10.--</span></div>
+        <div>IP 2: <span id="previewIp2">10.10.50.--</span></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-start" onclick="saveLHDData()">Save</button>
+        <button class="btn-stop" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POP-UP MODAL IMPORT -->
+  <div class="modal-overlay" id="importModalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">IMPORT / PRESET LHD</div>
+      
+      <button class="btn-start" style="width: 100%; margin-bottom: 12px; background: #0284c7; color: #fff; border-color: #38bdf8;" onclick="load50Presets()">
+        ⚡ GENERATE AUTOMATIC 50 LHD (01-50)
+      </button>
+
+      <div style="text-align: center; font-size: 0.75rem; color: #94a3b8; margin-bottom: 8px;">--- OR PASTE JSON CODE BELOW ---</div>
+
+      <textarea id="jsonPasteInput" rows="4" placeholder='Paste JSON text here...&#10;Contoh: [{"name":"LHD 656","ip1":"10.10.10.56","ip2":"10.10.50.56"}]'></textarea>
+
+      <div class="modal-footer">
+        <button class="btn-start" onclick="confirmTextImport()">Process Import Teks</button>
+        <button class="btn-stop" onclick="closeImportModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POP-UP NOTIFIKASI CUSTOM -->
+  <div class="modal-overlay" id="customAlertOverlay">
+    <div class="modal-box" style="text-align: center;">
+      <div class="modal-header" style="color: #ffd700;">NOTIFICATION</div>
+      <div class="alert-msg" id="customAlertText">Pesan Notifikasi</div>
+      <button class="btn-start" style="width: 100%; margin-top: 10px;" onclick="closeCustomAlert()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    let lhdData = JSON.parse(localStorage.getItem('lhd_ping_db')) || [
+      { name: "LHD 656", ip1: "10.10.10.56", ip2: "10.10.50.56" }
+    ];
+
+    let selectedLhdIndex = 0;
+    let editIndex = null;
+    let pingInterval = null;
+
+    let stats = {
+      ip1: { total: 0, success: 0, rto: 0, unreach: 0 },
+      ip2: { total: 0, success: 0, rto: 0, unreach: 0 }
+    };
+
+    // Dynamic Clock
+    function updateClock() {
+      const now = new Date();
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const dateStr = now.toLocaleDateString('en-US', options);
+      const timeStr = now.toTimeString().substring(0, 5);
+
+      document.getElementById('greetingText').innerHTML = 
+        `Hello and welcome back.<br>It is currently ${timeStr} local time on ${dateStr}. Have a wonderful day`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function showAlert(msg) {
+      document.getElementById('customAlertText').textContent = msg;
+      document.getElementById('customAlertOverlay').style.display = 'flex';
+    }
+
+    function closeCustomAlert() {
+      document.getElementById('customAlertOverlay').style.display = 'none';
+    }
+
+    // Render Custom Display & Option List
+    function renderLHDs(filtered = lhdData) {
+      const pickerContainer = document.getElementById('pickerOptionsContainer');
+      const container = document.getElementById('lhdListContainer');
+
+      pickerContainer.innerHTML = '';
+      container.innerHTML = '';
+
+      if (filtered.length === 0) {
+        document.getElementById('displayLhdName').textContent = "No LHD found";
+        document.getElementById('displayLhdIps').textContent = "-- | --";
+        pickerContainer.innerHTML = '<div style="font-size:0.8rem; color:#64748b; text-align:center; padding:10px;">List is empty</div>';
+        container.innerHTML = '<div style="font-size:0.8rem; color:#64748b; text-align:center;">List is empty</div>';
+        return;
+      }
+
+      // Pastikan index terpilih valid
+      if (selectedLhdIndex >= lhdData.length) selectedLhdIndex = 0;
+      const currentActive = lhdData[selectedLhdIndex];
+      document.getElementById('displayLhdName').textContent = currentActive.name;
+      document.getElementById('displayLhdIps').textContent = `${currentActive.ip1} | ${currentActive.ip2}`;
+
+      filtered.forEach((item) => {
+        const realIdx = lhdData.indexOf(item);
+
+        // Custom Option Item Format 2 Baris
+        const optCard = document.createElement('div');
+        optCard.className = `option-card-item ${realIdx === selectedLhdIndex ? 'selected' : ''}`;
+        optCard.onclick = () => selectLhdTarget(realIdx);
+        optCard.innerHTML = `
+          <div class="opt-title">${item.name}</div>
+          <div class="opt-sub">${item.ip1} | ${item.ip2}</div>
+        `;
+        pickerContainer.appendChild(optCard);
+
+        // Scrollable List Bottom Items
+        const div = document.createElement('div');
+        div.className = 'lhd-item';
+        div.innerHTML = `
+          <div><strong>${item.name}</strong> (${item.ip1} / ${item.ip2})</div>
+          <div class="action-btn-group">
+            <button class="btn-circle btn-circle-edit" onclick="openModal(${realIdx})" title="Edit">✎</button>
+            <button class="btn-circle btn-circle-del" onclick="deleteLHD(${realIdx})" title="Delete">✕</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function openPickerModal() {
+      document.getElementById('pickerModalOverlay').style.display = 'flex';
+    }
+
+    function closePickerModal() {
+      document.getElementById('pickerModalOverlay').style.display = 'none';
+    }
+
+    function selectLhdTarget(idx) {
+      selectedLhdIndex = idx;
+      renderLHDs();
+      closePickerModal();
+    }
+
+    // KODE BARU (OTOMATIS PILIH HASIL PERTAMA DARI PENCARIAN):
+function filterLHD() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const res = lhdData.filter(d => 
+    d.name.toLowerCase().includes(q) || d.ip1.includes(q) || d.ip2.includes(q)
+  );
+
+  // Jika hasil pencarian ditemukan, otomatis set index aktif ke item pertama hasil pencarian
+  if (res.length > 0 && q !== '') {
+    selectedLhdIndex = lhdData.indexOf(res[0]);
+  }
+
+  renderLHDs(res);
+}
+
+
+    // Modal Control & Auto Fill IP
+    function autoFillIp() {
+      const suffix = document.getElementById('ipSuffix').value.trim();
+      const ip1 = suffix ? `10.10.10.${suffix}` : '10.10.10.--';
+      const ip2 = suffix ? `10.10.50.${suffix}` : '10.10.50.--';
+
+      document.getElementById('previewIp1').textContent = ip1;
+      document.getElementById('previewIp2').textContent = ip2;
+    }
+
+    function openModal(index = null) {
+      editIndex = index;
+      const modal = document.getElementById('modalOverlay');
+      const title = document.getElementById('modalTitle');
+
+      if (index !== null) {
+        title.textContent = "EDIT LHD DATA";
+        const item = lhdData[index];
+        document.getElementById('newLhdName').value = item.name;
+        
+        const suffix = item.ip1.split('.').pop();
+        document.getElementById('ipSuffix').value = suffix;
+      } else {
+        title.textContent = "ADD NEW LHD DATA";
+        document.getElementById('newLhdName').value = '';
+        document.getElementById('ipSuffix').value = '';
+      }
+
+      autoFillIp();
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').style.display = 'none';
+      editIndex = null;
+    }
+
+    function saveLHDData() {
+      const name = document.getElementById('newLhdName').value.trim();
+      const suffix = document.getElementById('ipSuffix').value.trim();
+
+      if (!name || !suffix) {
+        showAlert('Please fill in LHD Name and IP Last Octet');
+        return;
+      }
+
+      const ip1 = `10.10.10.${suffix}`;
+      const ip2 = `10.10.50.${suffix}`;
+
+      if (editIndex !== null) {
+        lhdData[editIndex] = { name, ip1, ip2 };
+      } else {
+        lhdData.push({ name, ip1, ip2 });
+      }
+
+      localStorage.setItem('lhd_ping_db', JSON.stringify(lhdData));
+      closeModal();
+      renderLHDs();
+    }
+
+    function deleteLHD(idx) {
+      lhdData.splice(idx, 1);
+      if (selectedLhdIndex >= lhdData.length) selectedLhdIndex = 0;
+      localStorage.setItem('lhd_ping_db', JSON.stringify(lhdData));
+      renderLHDs();
+    }
+
+    function exportDataJSON() {
+      if (lhdData.length === 0) {
+        showAlert('LHD list is empty!');
+        return;
+      }
+
+      const jsonString = JSON.stringify(lhdData, null, 2);
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(jsonString).then(() => {
+          showAlert('JSON code successfully copied to your phone clipboard!');
+        }).catch(() => {
+          showAlert(jsonString);
+        });
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = jsonString;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showAlert('JSON code successfully copied to your phones clipboard!');
+      }
+    }
+
+    function openImportModal() {
+      document.getElementById('jsonPasteInput').value = '';
+      document.getElementById('importModalOverlay').style.display = 'flex';
+    }
+
+    function closeImportModal() {
+      document.getElementById('importModalOverlay').style.display = 'none';
+    }
+
+    function load50Presets() {
+      const presets = [];
+      for (let i = 1; i <= 50; i++) {
+        const num = i < 10 ? `0${i}` : `${i}`;
+        presets.push({
+          name: `LHD ${num}`,
+          ip1: `10.10.10.${i}`,
+          ip2: `10.10.50.${i}`
+        });
+      }
+      lhdData = presets;
+      selectedLhdIndex = 0;
+      localStorage.setItem('lhd_ping_db', JSON.stringify(lhdData));
+      renderLHDs();
+      closeImportModal();
+      showAlert('Successfully loaded LHD List Presets!');
+    }
+
+    function confirmTextImport() {
+      const txt = document.getElementById('jsonPasteInput').value.trim();
+      if (!txt) {
+        showAlert('Please paste the JSON text first!');
+        return;
+      }
+
+      try {
+        const imported = JSON.parse(txt);
+        if (Array.isArray(imported)) {
+          lhdData = imported;
+          selectedLhdIndex = 0;
+          localStorage.setItem('lhd_ping_db', JSON.stringify(lhdData));
+          renderLHDs();
+          closeImportModal();
+          showAlert('LHD data successfully imported!');
+        } else {
+          showAlert('Invalid JSON format (must be a data array)!');
+        }
+      } catch (err) {
+        showAlert('Invalid JSON text / format error!');
+      }
+    }
+
+    // Ping Logic
+    async function pingTarget(ip, logId, msId, replyId, rtoId, unreachId, key) {
+      const start = performance.now();
+      const logBox = document.getElementById(logId);
+      stats[key].total++;
+
+      try {
+        await fetch(`http://${ip}?t=${Date.now()}`, { mode: 'no-cors', cache: 'no-cache' });
+        const latency = Math.round(performance.now() - start);
+
+        stats[key].success++;
+        document.getElementById(msId).textContent = `${latency}ms`;
+
+        const item = document.createElement('div');
+        item.textContent = `Replay from ${ip} bytes:32 time=${latency}ms TTL 27`;
+        logBox.appendChild(item);
+
+      } catch (err) {
+        stats[key].rto++;
+        document.getElementById(msId).textContent = `TIMEOUT`;
+
+        const item = document.createElement('div');
+        item.style.color = '#ff3344';
+        item.textContent = `Request timeout from ${ip}`;
+        logBox.appendChild(item);
+      }
+
+      logBox.scrollTop = logBox.scrollHeight;
+
+      const total = stats[key].total;
+      document.getElementById(replyId).textContent = `Replay ${Math.round((stats[key].success / total) * 100)}%`;
+      document.getElementById(rtoId).textContent = `RTO ${Math.round((stats[key].rto / total) * 100)}%`;
+      document.getElementById(unreachId).textContent = `Unreachable ${Math.round((stats[key].unreach / total) * 100)}%`;
+    }
+
+    function executePingLoop() {
+      if (lhdData.length === 0) return;
+
+      const target = lhdData[selectedLhdIndex];
+      pingTarget(target.ip1, 'logIp1', 'msIp1', 'replyIp1', 'rtoIp1', 'unreachIp1', 'ip1');
+      pingTarget(target.ip2, 'logIp2', 'msIp2', 'replyIp2', 'rtoIp2', 'unreachIp2', 'ip2');
+    }
+
+    function startPing() {
+      if (lhdData.length === 0) {
+        showAlert('Please select an LHD target!');
+        return;
+      }
+
+      stats = {
+        ip1: { total: 0, success: 0, rto: 0, unreach: 0 },
+        ip2: { total: 0, success: 0, rto: 0, unreach: 0 }
+      };
+
+      const target = lhdData[selectedLhdIndex];
+      document.getElementById('titleIp1').textContent = target.ip1;
+      document.getElementById('titleIp2').textContent = target.ip2;
+      document.getElementById('logIp1').innerHTML = '';
+      document.getElementById('logIp2').innerHTML = '';
+
+      document.getElementById('btnStart').disabled = true;
+      document.getElementById('btnStop').disabled = false;
+
+      executePingLoop();
+      pingInterval = setInterval(executePingLoop, 2000);
+    }
+
+    function stopPing() {
+      if (pingInterval) clearInterval(pingInterval);
+      document.getElementById('btnStart').disabled = false;
+      document.getElementById('btnStop').disabled = true;
+    }
+
+    renderLHDs();
+  </script>
+</body>
+</html>
