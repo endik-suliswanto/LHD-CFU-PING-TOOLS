@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>LHD CFU ONBOARD ROUTER AND ORU PING TEST</title>
   <style>
+
     /* Import Font Lokal */
     @font-face {
       font-family: 'RajdhaniCustom';
@@ -388,7 +391,7 @@
 <body>
 
   <div class="container">
-    <div class="header-title">LHD CFU ONB  ROUTER AND ORU<br>SUBSYSTEM CONNECTIVY PROBE</div>
+    <div class="header-title">LHD CFU ONB ROUTER AND ORU<br>SUBSYSTEM CONNECTIVY PROBE</div>
     
     <div class="greeting-box" id="greetingText">
       Hello and welcome back.<br>
@@ -457,13 +460,11 @@
     <div class="lhd-scroll-area" id="lhdListContainer"></div>
   </div>
 
-  <!-- POP-UP MODAL PICKER LHD (Solusi Tampilan Senada & Teks 2 Baris) -->
+  <!-- POP-UP MODAL PICKER LHD -->
   <div class="modal-overlay" id="pickerModalOverlay">
     <div class="modal-box">
       <div class="modal-header">SELECT LHD TARGET</div>
-      
       <div class="custom-option-list" id="pickerOptionsContainer"></div>
-
       <button class="btn-stop" style="width: 100%; margin-top: 5px;" onclick="closePickerModal()">Close</button>
     </div>
   </div>
@@ -473,8 +474,8 @@
     <div class="modal-box">
       <div class="modal-header" id="modalTitle">ADD NEW LHD DATA</div>
       
-      <input type="text" id="newLhdName" placeholder="Name / LHD No. (e.g., LHD 656))" oninput="autoFillIp()">
-      <input type="text" id="ipSuffix" placeholder="Enter IP Tail/Last Octet only (e.g., 56) " oninput="autoFillIp()">
+      <input type="text" id="newLhdName" placeholder="Name / LHD No. (e.g., LHD 656)" oninput="autoFillIp()">
+      <input type="text" id="ipSuffix" placeholder="Enter IP Tail/Last Octet only (e.g., 56)" oninput="autoFillIp()">
 
       <div class="ip-preview-text">
         <div>IP 1: <span id="previewIp1">10.10.10.--</span></div>
@@ -569,7 +570,6 @@
         return;
       }
 
-      // Pastikan index terpilih valid
       if (selectedLhdIndex >= lhdData.length) selectedLhdIndex = 0;
       const currentActive = lhdData[selectedLhdIndex];
       document.getElementById('displayLhdName').textContent = currentActive.name;
@@ -578,7 +578,6 @@
       filtered.forEach((item) => {
         const realIdx = lhdData.indexOf(item);
 
-        // Custom Option Item Format 2 Baris
         const optCard = document.createElement('div');
         optCard.className = `option-card-item ${realIdx === selectedLhdIndex ? 'selected' : ''}`;
         optCard.onclick = () => selectLhdTarget(realIdx);
@@ -588,7 +587,6 @@
         `;
         pickerContainer.appendChild(optCard);
 
-        // Scrollable List Bottom Items
         const div = document.createElement('div');
         div.className = 'lhd-item';
         div.innerHTML = `
@@ -616,23 +614,19 @@
       closePickerModal();
     }
 
-    // KODE BARU (OTOMATIS PILIH HASIL PERTAMA DARI PENCARIAN):
-function filterLHD() {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  const res = lhdData.filter(d => 
-    d.name.toLowerCase().includes(q) || d.ip1.includes(q) || d.ip2.includes(q)
-  );
+    function filterLHD() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const res = lhdData.filter(d => 
+        d.name.toLowerCase().includes(q) || d.ip1.includes(q) || d.ip2.includes(q)
+      );
 
-  // Jika hasil pencarian ditemukan, otomatis set index aktif ke item pertama hasil pencarian
-  if (res.length > 0 && q !== '') {
-    selectedLhdIndex = lhdData.indexOf(res[0]);
-  }
+      if (res.length > 0 && q !== '') {
+        selectedLhdIndex = lhdData.indexOf(res[0]);
+      }
 
-  renderLHDs(res);
-}
+      renderLHDs(res);
+    }
 
-
-    // Modal Control & Auto Fill IP
     function autoFillIp() {
       const suffix = document.getElementById('ipSuffix').value.trim();
       const ip1 = suffix ? `10.10.10.${suffix}` : '10.10.10.--';
@@ -720,7 +714,7 @@ function filterLHD() {
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        showAlert('JSON code successfully copied to your phones clipboard!');
+        showAlert('JSON code successfully copied to your phone clipboard!');
       }
     }
 
@@ -775,65 +769,79 @@ function filterLHD() {
       }
     }
 
-async function pingTarget(ip, logId, msId, replyId, rtoId, unreachId, key) {
-  const start = performance.now();
-  const logBox = document.getElementById(logId);
-  stats[key].total++;
+    async function pingTarget(ip, logId, msId, replyId, rtoId, unreachId, key) {
+      const start = performance.now();
+      const logBox = document.getElementById(logId);
+      stats[key].total++;
 
-  const controller = new AbortController();
-  // Set batas timeout 1.8 detik
-  const timeoutId = setTimeout(() => controller.abort(), 1800);
+      if (!navigator.onLine) {
+        stats[key].unreach++;
+        document.getElementById(msId).textContent = `OFFLINE`;
+        
+        const item = document.createElement('div');
+        item.style.color = '#ffd700';
+        item.textContent = `Network offline / No connection (${ip})`;
+        logBox.appendChild(item);
+        logBox.scrollTop = logBox.scrollHeight;
+        
+        updateMetrics(replyId, rtoId, unreachId, key);
+        return;
+      }
 
-  try {
-    // Jalankan request HTTP no-cors dengan deteksi abort murni
-    await fetch(`http://${ip}/?t=${Date.now()}`, {
-      mode: 'no-cors',
-      cache: 'no-cache',
-      signal: controller.signal
-    });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1500);
 
-    clearTimeout(timeoutId);
-    const latency = Math.round(performance.now() - start);
+      try {
+        await fetch(`http://${ip}?t=${Date.now()}`, {
+          mode: 'no-cors',
+          cache: 'no-cache',
+          signal: controller.signal
+        });
 
-    // Batas bawah latensi: Jika di bawah 15ms pada jaringan nirkabel/LHD, 
-    // ini adalah paket penolakan cepat dari Access Point/Router lokal
-    if (latency < 15) {
-      throw new Error("Router Local Reject");
+        clearTimeout(timeoutId);
+        const latency = Math.round(performance.now() - start);
+
+        stats[key].success++;
+        document.getElementById(msId).textContent = `${latency}ms`;
+
+        const item = document.createElement('div');
+        item.textContent = `Replay from ${ip} bytes:32 time=${latency}ms TTL 27`;
+        logBox.appendChild(item);
+
+      } catch (err) {
+        clearTimeout(timeoutId);
+        stats[key].rto++;
+        document.getElementById(msId).textContent = `TIMEOUT`;
+
+        const item = document.createElement('div');
+        item.style.color = '#ff3344';
+        item.textContent = `Request timeout from ${ip}`;
+        logBox.appendChild(item);
+      }
+
+      logBox.scrollTop = logBox.scrollHeight;
+      updateMetrics(replyId, rtoId, unreachId, key);
     }
 
-    stats[key].success++;
-    document.getElementById(msId).textContent = `${latency}ms`;
+    function updateMetrics(replyId, rtoId, unreachId, key) {
+      const total = stats[key].total;
+      if (total > 0) {
+        document.getElementById(replyId).textContent = `Replay ${Math.round((stats[key].success / total) * 100)}%`;
+        document.getElementById(rtoId).textContent = `RTO ${Math.round((stats[key].rto / total) * 100)}%`;
+        document.getElementById(unreachId).textContent = `Unreachable ${Math.round((stats[key].unreach / total) * 100)}%`;
+      }
+    }
 
-    const item = document.createElement('div');
-    item.textContent = `Replay from ${ip} bytes:32 time=${latency}ms TTL 27`;
-    logBox.appendChild(item);
-
-  } catch (err) {
-    clearTimeout(timeoutId);
-    stats[key].rto++;
-    document.getElementById(msId).textContent = `TIMEOUT`;
-
-    const item = document.createElement('div');
-    item.style.color = '#ff3344';
-    item.textContent = `Request timeout from ${ip}`;
-    logBox.appendChild(item);
-  }
-
-  logBox.scrollTop = logBox.scrollHeight;
-
-  const total = stats[key].total;
-  document.getElementById(replyId).textContent = `Replay ${Math.round((stats[key].success / total) * 100)}%`;
-  document.getElementById(rtoId).textContent = `RTO ${Math.round((stats[key].rto / total) * 100)}%`;
-  document.getElementById(unreachId).textContent = `Unreachable ${Math.round((stats[key].unreach / total) * 100)}%`;
-}
-
-
-    function executePingLoop() {
-      if (lhdData.length === 0) return;
-
+    // FUNGSI UTAMA UNTUK EKSEKUSI PING SEPARALEL/SECARA BERSAMAAN
+    async function executePingLoop() {
       const target = lhdData[selectedLhdIndex];
-      pingTarget(target.ip1, 'logIp1', 'msIp1', 'replyIp1', 'rtoIp1', 'unreachIp1', 'ip1');
-      pingTarget(target.ip2, 'logIp2', 'msIp2', 'replyIp2', 'rtoIp2', 'unreachIp2', 'ip2');
+      if (!target) return;
+
+      // Jalankan ping kedua IP secara paralel
+      Promise.all([
+        pingTarget(target.ip1, 'logIp1', 'msIp1', 'replyIp1', 'rtoIp1', 'unreachIp1', 'ip1'),
+        pingTarget(target.ip2, 'logIp2', 'msIp2', 'replyIp2', 'rtoIp2', 'unreachIp2', 'ip2')
+      ]);
     }
 
     function startPing() {
@@ -856,6 +864,7 @@ async function pingTarget(ip, logId, msId, replyId, rtoId, unreachId, key) {
       document.getElementById('btnStart').disabled = true;
       document.getElementById('btnStop').disabled = false;
 
+      // Jalankan sekali saat tombol diklik, lalu ulangi tiap 2 detik
       executePingLoop();
       pingInterval = setInterval(executePingLoop, 2000);
     }
